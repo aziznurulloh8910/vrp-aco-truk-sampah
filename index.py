@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import networkx as nx
 from itertools import permutations
-from matplotlib.animation import FuncAnimation
 
 # Data input
 depot = (106.84513, -6.208763)  # Koordinat depot
@@ -17,6 +16,16 @@ nodes = [
     (106.841234, -6.206321), 
     (106.843345, -6.209876),
     (106.845987, -6.210123), 
+    (106.847654, -6.206789), 
+    (106.850123, -6.205432),
+    (106.842341, -6.208654), 
+    (106.844567, -6.210234), 
+    (106.846789, -6.207890),
+    (106.849001, -6.209234), 
+    (106.841987, -6.205678), 
+    (106.843456, -6.208901),
+    (106.845123, -6.207654), 
+    (106.847890, -6.206345)
 ]
 truck_capacity = 10  # kapasitas truk dalam m^3
 num_trucks = 2  # jumlah truk yang tersedia
@@ -52,9 +61,8 @@ class AntColonyOptimizationVRP:
         self.pheromone_matrix = np.ones((self.num_nodes, self.num_nodes))
     
     def run(self):
-        self.best_route = None
-        self.best_distance = float('inf')
-        self.iteration_routes = []
+        best_route = None
+        best_distance = float('inf')
         
         for iteration in range(self.num_iterations):
             all_routes = []
@@ -65,14 +73,13 @@ class AntColonyOptimizationVRP:
                 all_routes.append(route)
                 all_distances.append(distance)
                 
-                if distance < self.best_distance:
-                    self.best_route = route
-                    self.best_distance = distance
+                if distance < best_distance:
+                    best_route = route
+                    best_distance = distance
             
             self.update_pheromone(all_routes, all_distances)
-            self.iteration_routes.append(self.best_route.copy())
         
-        return self.best_route, self.best_distance
+        return best_route, best_distance
     
     def construct_solution(self):
         route = []
@@ -123,23 +130,19 @@ class AntColonyOptimizationVRP:
 aco_vrp = AntColonyOptimizationVRP(distance_matrix, num_trucks, truck_capacity)
 best_route, best_distance = aco_vrp.run()
 
-# Animasi rute terbaik
-fig, ax = plt.subplots(figsize=(10, 10))
-G = nx.DiGraph()
-pos = {i: all_nodes[i] for i in range(len(all_nodes))}
-nx.draw(G, pos, with_labels=True, node_size=700, node_color='lightblue', font_size=10, font_weight='bold')
-
-def update(num):
-    ax.clear()
-    route = aco_vrp.iteration_routes[num]
+# Visualisasi rute terbaik
+def plot_route(route):
+    G = nx.DiGraph()
+    pos = {i: all_nodes[i] for i in range(len(all_nodes))}
     edges = [(route[i], route[i + 1]) for i in range(len(route) - 1)]
-    G.clear()
+    
     G.add_edges_from(edges)
+    
+    plt.figure(figsize=(10, 10))
     nx.draw(G, pos, with_labels=True, node_size=700, node_color='lightblue', font_size=10, font_weight='bold')
-    ax.set_title(f"Iteration {num + 1}")
+    plt.show()
 
-ani = FuncAnimation(fig, update, frames=len(aco_vrp.iteration_routes), interval=500, repeat=False)
-plt.show()
+plot_route(best_route)
 
 # Hitung metrik lainnya
 total_trash_volume = truck_capacity * num_trucks
